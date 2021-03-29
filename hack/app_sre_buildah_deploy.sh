@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # AppSRE team CD
+# This is a buildah version of the docker script
 
 set -exv
 
