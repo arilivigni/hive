@@ -7,26 +7,18 @@ set -exv
 
 CURRENT_DIR=$(dirname $0)
 
-BASE_IMG="hive"
-QUAY_IMAGE="quay.io/app-sre/${BASE_IMG}"
-IMG="${BASE_IMG}:latest"
+# build image
+buildah bud --tls-verify=$SSL_VERIFY \
+--layers \
+-f $DOCKERFILE_CONTEXT_DIR \
+-t $QUAY_IMG:$GIT_HASH .
 
-GIT_HASH=`git rev-parse --short=7 HEAD`
+# deploy image with to quay.io with git hash to image tag
+buildah push --tls-verify=$SSL_VERIFY \
+$QUAY_IMG:$GIT_HASH \
+$QUAY_IMG:$GIT_HASH
 
-# build the image
-BUILD_CMD="docker build" IMG="$IMG" make GO_REQUIRED_MIN_VERSION:= docker-build
-
-# push the image
-skopeo copy --dest-creds "${QUAY_USER}:${QUAY_TOKEN}" \
-    "docker-daemon:${IMG}" \
-    "docker://${QUAY_IMAGE}:latest"
-
-skopeo copy --dest-creds "${QUAY_USER}:${QUAY_TOKEN}" \
-    "docker-daemon:${IMG}" \
-    "docker://${QUAY_IMAGE}:${GIT_HASH}"
-
-# create and push staging image catalog
-$CURRENT_DIR/app_sre_create_image_catalog.sh staging "$QUAY_IMAGE"
-
-# create and push production image catalog
-REMOVE_UNDEPLOYED=true $CURRENT_DIR/app_sre_create_image_catalog.sh production "$QUAY_IMAGE"
+# deploy image to quay.io with latest tag
+buildah push --tls-verify=$SSL_VERIFY \
+$QUAY_IMG:$GIT_HASH \
+$QUAY_IMG:latest
