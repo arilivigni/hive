@@ -167,11 +167,12 @@ type Options struct {
 	AzureBaseDomainResourceGroupName string
 
 	// OpenStack
-	OpenStackCloud           string
-	OpenStackExternalNetwork string
-	OpenStackMasterFlavor    string
-	OpenStackComputeFlavor   string
-	OpenStackAPIFloatingIP   string
+	OpenStackCloud             string
+	OpenStackExternalNetwork   string
+	OpenStackMasterFlavor      string
+	OpenStackComputeFlavor     string
+	OpenStackAPIFloatingIP     string
+	OpenStackIngressFloatingIP string
 
 	// VSphere
 	VSphereVCenter          string
@@ -241,14 +242,14 @@ create-cluster CLUSTER_DEPLOYMENT_NAME --cloud=ovirt --ovirt-api-vip 192.168.1.2
 	}
 
 	flags := cmd.Flags()
-	flags.StringVar(&opt.Cloud, "cloud", cloudAWS, "Cloud provider: aws(default)|azure|gcp|openstack)")
+	flags.StringVar(&opt.Cloud, "cloud", cloudAWS, "Cloud provider: aws|azure|gcp|openstack")
 	flags.StringVarP(&opt.Namespace, "namespace", "n", "", "Namespace to create cluster deployment in")
 	flags.StringVar(&opt.SSHPrivateKeyFile, "ssh-private-key-file", "", "file name containing private key contents")
 	flags.StringVar(&opt.SSHPublicKeyFile, "ssh-public-key-file", defaultSSHPublicKeyFile, "file name of SSH public key for cluster")
 	flags.StringVar(&opt.SSHPublicKey, "ssh-public-key", "", "SSH public key for cluster")
 	flags.StringVar(&opt.BaseDomain, "base-domain", "new-installer.openshift.com", "Base domain for the cluster")
 	flags.StringVar(&opt.PullSecret, "pull-secret", "", "Pull secret for cluster. Takes precedence over pull-secret-file.")
-	flags.StringVar(&opt.DeleteAfter, "delete-after", "", "Delete this cluster after the given duration. (i.e. 8h)")
+	flags.StringVar(&opt.DeleteAfter, "delete-after", "", "Delete this cluster after the given duration. (e.g. 8h)")
 	flags.StringVar(&opt.HibernateAfter, "hibernate-after", "", "Automatically hibernate the cluster whenever it has been running for the given duration")
 	flags.StringVar(&opt.PullSecretFile, "pull-secret-file", defaultPullSecretFile, "Pull secret file for cluster")
 	flags.StringVar(&opt.BoundServiceAccountSigningKeyFile, "bound-service-account-signing-key-file", "", "Private service account signing key (often created with ccoutil create key-pair)")
@@ -261,7 +262,7 @@ create-cluster CLUSTER_DEPLOYMENT_NAME --cloud=ovirt --ovirt-api-vip 192.168.1.2
 	flags.StringVar(&opt.ServingCert, "serving-cert", "", "Serving certificate for control plane and routes")
 	flags.StringVar(&opt.ServingCertKey, "serving-cert-key", "", "Serving certificate key for control plane and routes")
 	flags.BoolVar(&opt.ManageDNS, "manage-dns", false, "Manage this cluster's DNS. This is only available for AWS and GCP.")
-	flags.BoolVar(&opt.UseClusterImageSet, "use-image-set", true, "If true(default), use a cluster image set for this cluster")
+	flags.BoolVar(&opt.UseClusterImageSet, "use-image-set", true, "If true, use a cluster image set for this cluster")
 	flags.StringVarP(&opt.Output, "output", "o", "", "Output of this command (nothing will be created on cluster). Valid values: yaml,json")
 	flags.BoolVar(&opt.IncludeSecrets, "include-secrets", true, "Include secrets along with ClusterDeployment")
 	flags.BoolVar(&opt.InstallOnce, "install-once", false, "Run the install only one time and fail if not successful")
@@ -300,6 +301,7 @@ OpenShift Installer publishes all the services of the cluster like API server an
 	flags.StringVar(&opt.OpenStackMasterFlavor, "openstack-master-flavor", "ci.m4.xlarge", "Compute flavor to use for master nodes")
 	flags.StringVar(&opt.OpenStackComputeFlavor, "openstack-compute-flavor", "m1.large", "Compute flavor to use for worker nodes")
 	flags.StringVar(&opt.OpenStackAPIFloatingIP, "openstack-api-floating-ip", "", "Floating IP address to use for cluster's API")
+	flags.StringVar(&opt.OpenStackIngressFloatingIP, "openstack-ingress-floating-ip", "", "Floating IP address to use for cluster's Ingress service")
 
 	// vSphere flags
 	flags.StringVar(&opt.VSphereVCenter, "vsphere-vcenter", "", "Domain name or IP address of the vCenter")
@@ -633,6 +635,7 @@ func (o *Options) GenerateObjects() ([]runtime.Object, error) {
 			ComputeFlavor:     o.OpenStackComputeFlavor,
 			MasterFlavor:      o.OpenStackMasterFlavor,
 			APIFloatingIP:     o.OpenStackAPIFloatingIP,
+			IngressFloatingIP: o.OpenStackIngressFloatingIP,
 		}
 		builder.CloudBuilder = openStackProvider
 	case cloudVSphere:

@@ -1530,7 +1530,7 @@ users:
 					AssociatedVPCs:       test.associate,
 				},
 
-				awsClientFn: func(_ client.Client, _, _, _ string) (awsclient.Client, error) {
+				awsClientFn: func(_ client.Client, _ awsclient.Options) (awsclient.Client, error) {
 					return mockedAWSClient, nil
 				},
 			}
@@ -1539,7 +1539,7 @@ users:
 				NamespacedName: key,
 			}
 
-			_, err := reconciler.Reconcile(reconcileRequest)
+			_, err := reconciler.Reconcile(context.TODO(), reconcileRequest)
 			if test.err == "" {
 				assert.NoError(t, err, "unexpected error from Reconcile")
 			} else {

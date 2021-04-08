@@ -260,7 +260,7 @@ func TestClusterDeprovisionReconcile(t *testing.T) {
 				return mocks.mockAWSClient, nil
 			}}}
 
-			_, err := r.Reconcile(reconcile.Request{
+			_, err := r.Reconcile(context.TODO(), reconcile.Request{
 				NamespacedName: types.NamespacedName{
 					Name:      testName,
 					Namespace: testNamespace,
@@ -322,7 +322,7 @@ func testClusterDeployment() *hivev1.ClusterDeployment {
 }
 
 func testUninstallJob() *batchv1.Job {
-	uninstallJob, _ := install.GenerateUninstallerJobForDeprovision(testClusterDeprovision())
+	uninstallJob, _ := install.GenerateUninstallerJobForDeprovision(testClusterDeprovision(), "someserviceaccount", nil)
 	hash, err := controllerutils.CalculateJobSpecHash(uninstallJob)
 	if err != nil {
 		panic("should never get error calculating job spec hash")
